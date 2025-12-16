@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+import json
 
 app = FastAPI()
 
@@ -6,10 +7,8 @@ app = FastAPI()
 def root():
     return {"message": "FastAPI on Cloud Run is running"}
 
-from fastapi import Request
-
 @app.post("/webhook")
 async def webhook(request: Request):
-    body = await request.body()
-    print(body)
+    body = await request.json()   # ← ここ重要
+    print(json.dumps(body, ensure_ascii=False))
     return "OK"
