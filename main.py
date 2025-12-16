@@ -1,22 +1,31 @@
-from fastapi import FastAPI
-import requests
+from fastapi import FastAPI, Request
+from linebot import LineBotApi, WebhookParser
+from linebot.models import MessageEvent, TextMessage, TextSendMessage
+import os
 
 app = FastAPI()
 
-CHANNEL_ACCESS_TOKEN = "hIHiDM3hQpF1Lhi5LlnAQTGCSdRxKs1UrZms7MwQJIVajiwrvFA+rPz6tzqTVPaPO5ENB29WlRs01sl31nw8b2Xpl0omz4Yyx3GrQnZg+LxbSyr2j3UDoGH8q4rwoavJFNmODH7ieCJxNlaebcT3WAdB04t89/1O/w1cDnyilFU="
+LINE_CHANNEL_ACCESS_TOKEN = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
+LINE_CHANNEL_SECRET = os.environ["LINE_CHANNEL_SECRET"]
+
+line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
+parser = WebhookParser(LINE_CHANNEL_SECRET)
 
 @app.get("/")
 def root():
-    return {"message": "alive"}
+    return {"message": "running"}
 
-@app.get("/test-line")
-def test_line():
-    url = "https://api.line.me/v2/bot/profile/me"
-    headers = {
-        "Authorization": f"Bearer {CHANNEL_ACCESS_TOKEN}"
-    }
-    r = requests.get(url, headers=headers)
-    return {
-        "status_code": r.status_code,
-        "text": r.text
-    }
+@app.post("/webhook")
+async def webhook(request: Request):
+    body = await request.body()
+    signature = request.headers.get("X-Line-Signature", "")
+    events = parser.parse(body.decode("utf-8"), signature)
+
+    for event in events:
+        if isinstance(event, MessageEvent) and isinstance(event.message, TextMessage):
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text="受信したよ")
+            )
+
+    return "OK"
