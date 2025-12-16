@@ -1,44 +1,30 @@
 from fastapi import FastAPI, Request
-import os
 import requests
 import json
 
 app = FastAPI()
 
-CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
-
-@app.get("/")
-def root():
-    return {"message": "FastAPI on Cloud Run is running"}
+CHANNEL_ACCESS_TOKEN = "hIHiDM3hQpF1Lhi5LlnAQTGCSdRxKs1UrZms7MwQJIVajiwrvFA+rPz6tzqTVPaPO5ENB29WlRs01sl31nw8b2Xpl0omz4Yyx3GrQnZg+LxbSyr2j3UDoGH8q4rwoavJFNmODH7ieCJxNlaebcT3WAdB04t89/1O/w1cDnyilFU="
+USER_ID = "Udd1943e221b989db073025ee129241cb"
 
 @app.post("/webhook")
 async def webhook(request: Request):
-    body = await request.json()
-
-    # メッセージイベントだけ処理
-    events = body.get("events", [])
-    for event in events:
-        if event.get("type") == "message":
-            reply_token = event["replyToken"]
-            user_message = event["message"]["text"]
-
-            reply(reply_token, user_message)
-
+    push_message("強制pushテスト")
     return "OK"
 
 
-def reply(reply_token: str, text: str):
-    url = "https://api.line.me/v2/bot/message/reply"
+def push_message(text: str):
+    url = "https://api.line.me/v2/bot/message/push"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {CHANNEL_ACCESS_TOKEN}"
     }
     data = {
-        "replyToken": reply_token,
+        "to": USER_ID,
         "messages": [
             {
                 "type": "text",
-                "text": f"受け取ったよ：{text}"
+                "text": text
             }
         ]
     }
